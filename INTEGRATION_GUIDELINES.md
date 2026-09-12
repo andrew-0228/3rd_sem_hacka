@@ -136,14 +136,25 @@ is trying to hold everyone to.
 
 ## Open items across the whole system
 
-- **Person 1:** re-verify the settle/reserve fix above using your
-  merge-and-test method — see `agent_engines/CHANGELOG.md`'s top entry.
-- **Person 3:** `/agents/settle` and `/agents/reserve` are now live —
-  see `agent_engines/CHANGELOG.md`'s second entry for exactly what to
-  call and how `adjusted_kw_amount` factors in.
+- **RESOLVED (2026-09-12, re-verified by AI assistant):** the settle/reserve
+  fix has been re-checked with a real merge-and-run — all three services
+  built and started from a clean copy (`shared/contracts.py` also needed
+  `ClearFaultRequest` and `ValidateActionsRequest` added, and `orchestrator/`
+  needed its `schemas.contracts` imports corrected to `shared.contracts` —
+  both fixed), then the full canonical sequence was driven live end-to-end
+  (`GRID_SOURCE=live AGENT_SOURCE=live`) against the real campus network's
+  actual overloaded feeders (F2 at ~93%, F3 at ~85%). Real trades settled
+  through `/agents/settle` (not the orchestrator's fallback pricing path)
+  and confirmed on the blockchain ledger, with zero unhandled errors across
+  20+ ticks. The `line_fault` demo scenario was also triggered through the
+  orchestrator and produced real topology-based islanding on F2. Steps 1–7
+  of the canonical sequence are now confirmed working together, not just
+  individually.
 - **Person 3:** confirm the orchestrator substitutes `adjusted_kw_amount`
   for `kw_amount` before calling `/agents/settle` on a partial approval —
-  flagged earlier, not yet confirmed tested against that specific case.
+  flagged earlier, not yet confirmed tested against that specific case
+  (the live run above didn't happen to exercise a partial/adjusted
+  validation result, only fully-feasible ones).
 - **Resolved:** whether grid_engine needs an endpoint to commit a settled
   trade into its own live state — Person 3 confirmed (as demo owner) the
   orchestrator's own trade/blockchain history covers this for the demo.

@@ -187,3 +187,11 @@ class ClearMarketRequest(BaseModel):
 class FaultInjectionRequest(BaseModel):
     feeder_id: str
     fault_type: Literal["solar_drop", "demand_spike", "feeder_overload", "battery_failure", "grid_outage", "line_fault"]
+
+
+class ClearFaultRequest(BaseModel):
+    feeder_id: str
+
+
+class ValidateActionsRequest(BaseModel):
+    actions: list[ProposedAction]

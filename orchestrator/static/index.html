@@ -2,185 +2,407 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Microgrid Resilience Exchange</title>
 <style>
   :root {
-    --bg: #0b0e14;
-    --panel: #131722;
-    --panel-border: #232838;
-    --text: #e6e9ef;
-    --text-dim: #8a91a3;
-    --green: #3ddc84;
-    --yellow: #f5c542;
-    --red: #f5544a;
-    --blue: #4d8ef5;
-    --purple: #b06cf5;
+    --bg: #0a0c12;
+    --bg-2: #0d1019;
+    --panel: #12151f;
+    --panel-2: #171b28;
+    --panel-border: #242a3c;
+    --panel-border-soft: #1b2032;
+    --text: #eef0f5;
+    --text-dim: #99a2b8;
+    --text-faint: #5f6a82;
+    --green: #34d399;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --purple: #c084fc;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.25);
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     margin: 0;
-    background: var(--bg);
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(96,165,250,0.07), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(192,132,252,0.06), transparent 55%),
+      var(--bg);
     color: var(--text);
     font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
     font-size: 14px;
+    -webkit-font-smoothing: antialiased;
   }
+
+  /* ---------------- topbar ---------------- */
   #topbar {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 16px;
-    background: var(--panel);
+    gap: 14px;
+    padding: 12px 18px;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
     border-bottom: 1px solid var(--panel-border);
+    flex-wrap: wrap;
+  }
+  #brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+  #brand .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 3px rgba(52,211,153,0.15);
   }
   #topbar h1 {
     font-size: 16px;
     margin: 0;
-    margin-right: auto;
-    font-weight: 600;
+    font-weight: 650;
+    letter-spacing: 0.01em;
   }
-  #conn-status {
-    font-size: 12px;
-    padding: 3px 10px;
-    border-radius: 12px;
-    background: #222;
+  #topbar .subtitle {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 1px;
   }
-  #conn-status.connected { background: rgba(61,220,132,0.15); color: var(--green); }
-  #conn-status.disconnected { background: rgba(245,84,74,0.15); color: var(--red); }
+
+  #scenario-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border-soft);
+    border-radius: 10px;
+    padding: 4px;
+  }
 
   button.scenario-btn {
-    background: #1c2233;
-    color: var(--text);
-    border: 1px solid var(--panel-border);
-    border-radius: 6px;
-    padding: 6px 12px;
+    position: relative;
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid transparent;
+    border-radius: 7px;
+    padding: 7px 12px;
     font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease, border-color 0.15s ease;
+    white-space: nowrap;
   }
-  button.scenario-btn:hover { background: #262e45; }
-  button.scenario-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.scenario-btn::before { content: "⚡"; margin-right: 5px; opacity: 0.6; font-size: 11px; }
+  button.scenario-btn:hover { background: #1d2336; color: var(--text); }
+  button.scenario-btn:active { transform: scale(0.96); }
+  button.scenario-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  button.scenario-btn.pending { color: var(--yellow); border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.08); }
+  button.scenario-btn.pending::before { content: "◌"; animation: spin 0.8s linear infinite; display: inline-block; }
+
   button#reset-btn {
-    background: rgba(77,142,245,0.15);
+    background: rgba(96,165,250,0.12);
     color: var(--blue);
-    border: 1px solid rgba(77,142,245,0.3);
+    border: 1px solid rgba(96,165,250,0.3);
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.08s ease;
+  }
+  button#reset-btn::before { content: "↺  "; }
+  button#reset-btn:hover { background: rgba(96,165,250,0.2); }
+  button#reset-btn:active { transform: scale(0.96); }
+  button#reset-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  #conn-status {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px 5px 10px;
+    border-radius: 999px;
+    background: #222;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.02em;
+  }
+  #conn-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  #conn-status.connected { background: rgba(52,211,153,0.14); color: var(--green); }
+  #conn-status.connected::before { animation: livepulse 1.6s ease-in-out infinite; }
+  #conn-status.disconnected { background: rgba(248,113,113,0.14); color: var(--red); }
+  @keyframes livepulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.5); }
+    50% { box-shadow: 0 0 0 4px rgba(52,211,153,0); }
   }
 
+  /* ---------------- toasts ---------------- */
+  #toast-stack {
+    position: fixed;
+    top: 66px;
+    right: 18px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .toast {
+    background: var(--panel-2);
+    border: 1px solid var(--panel-border);
+    border-left: 3px solid var(--blue);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    box-shadow: var(--shadow);
+    max-width: 340px;
+    animation: toast-in 0.22s ease-out;
+    opacity: 1;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .toast.warning { border-left-color: var(--yellow); }
+  .toast.error { border-left-color: var(--red); }
+  .toast.success { border-left-color: var(--green); }
+  .toast.fade-out { opacity: 0; transform: translateX(12px); }
+  @keyframes toast-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* ---------------- layout ---------------- */
   #layout {
     display: grid;
-    grid-template-columns: 1fr 320px;
-    grid-template-rows: 1fr 220px;
-    gap: 12px;
-    padding: 12px;
-    height: calc(100vh - 53px);
+    grid-template-columns: 1fr 340px;
+    grid-template-rows: 1fr 240px;
+    gap: 14px;
+    padding: 14px;
+    height: calc(100vh - 61px);
+    min-height: 560px;
   }
   .panel {
-    background: var(--panel);
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
     border: 1px solid var(--panel-border);
-    border-radius: 10px;
-    padding: 12px;
+    border-radius: 12px;
+    padding: 14px 14px 10px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    box-shadow: var(--shadow);
   }
   .panel h2 {
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
     margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+  }
+  .panel h2 .count-pill {
+    background: var(--panel-border-soft);
+    color: var(--text-dim);
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    letter-spacing: 0;
+    text-transform: none;
+    font-weight: 700;
   }
 
-  #map-panel { grid-column: 1; grid-row: 1; }
-  #status-panel { grid-column: 2; grid-row: 1; overflow-y: auto; }
+  #map-panel { grid-column: 1; grid-row: 1; position: relative; }
+  #right-col { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  #status-panel { flex: 3; min-height: 0; }
+  #chain-panel { flex: 2; min-height: 0; }
   #log-panel { grid-column: 1 / span 2; grid-row: 2; }
 
-  .status-row { margin-bottom: 14px; }
-  .status-label { color: var(--text-dim); font-size: 11px; margin-bottom: 4px; }
-  .status-value { font-size: 18px; font-weight: 600; }
-  .bar-bg {
-    background: #1c2233;
-    border-radius: 4px;
-    height: 8px;
-    overflow: hidden;
-    margin-top: 6px;
+  @media (max-width: 900px) {
+    #layout { grid-template-columns: 1fr; grid-template-rows: auto auto auto; height: auto; }
+    #map-panel, #right-col, #log-panel { grid-column: 1; }
+    #log-panel { grid-row: auto; height: 260px; }
+    body { overflow-y: auto; }
   }
-  .bar-fill { height: 100%; transition: width 0.4s ease, background 0.4s ease; }
 
+  /* ---------------- system status ---------------- */
+  #status-content { overflow-y: auto; flex: 1; min-height: 0; padding-right: 2px; }
+  .status-row { margin-bottom: 14px; }
+  .status-label {
+    color: var(--text-dim);
+    font-size: 11px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .status-value { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
+  .bar-bg {
+    background: #1a2032;
+    border-radius: 5px;
+    height: 7px;
+    overflow: hidden;
+    margin-top: 7px;
+  }
+  .bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s ease, background 0.5s ease; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+  .badge.b-normal { background: rgba(52,211,153,0.14); color: var(--green); }
+  .badge.b-warning { background: rgba(251,191,36,0.14); color: var(--yellow); }
+  .badge.b-faulted, .badge.b-islanded { background: rgba(248,113,113,0.16); color: var(--red); }
+  .badge::before { content: "●"; font-size: 8px; }
+
+  .divider { height: 1px; background: var(--panel-border-soft); margin: 4px 0 14px; }
+
+  /* ---------------- blockchain panel ---------------- */
+  #chain-scroll { overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px; padding-right: 2px; }
+  #chain-panel h2::after {
+    content: attr(data-hint);
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--text-faint);
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+  }
+  .block-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--panel-border-soft);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .block-row.block-new { animation: block-flash 1.2s ease-out; }
+  @keyframes block-flash {
+    0% { background: rgba(192,132,252,0.28); border-color: rgba(192,132,252,0.6); }
+    100% { background: var(--panel-2); border-color: var(--panel-border-soft); }
+  }
+  .block-num {
+    flex: 0 0 auto;
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: rgba(192,132,252,0.12);
+    color: var(--purple);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+  }
+  .block-body { flex: 1; min-width: 0; }
+  .block-type { font-size: 12px; font-weight: 600; color: var(--text); }
+  .block-meta { font-size: 10.5px; color: var(--text-faint); font-family: "SF Mono", Menlo, monospace; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .block-time { flex: 0 0 auto; font-size: 10.5px; color: var(--text-faint); }
+  #chain-empty { color: var(--text-faint); font-size: 12px; padding: 20px 4px; text-align: center; }
+
+  /* ---------------- agent activity log ---------------- */
   #log-scroll {
     flex: 1;
     overflow-y: auto;
     font-family: "SF Mono", Menlo, monospace;
     font-size: 12px;
-    line-height: 1.6;
+    line-height: 1.9;
   }
-  .log-line { white-space: pre-wrap; }
-  .log-time { color: var(--text-dim); }
-  .log-source { font-weight: 600; }
+  .log-line { white-space: pre-wrap; padding: 1px 6px; border-radius: 4px; }
+  .log-line.log-new { animation: log-flash 1s ease-out; }
+  @keyframes log-flash { 0% { background: rgba(96,165,250,0.16); } 100% { background: transparent; } }
+  .log-time { color: var(--text-faint); }
+  .log-source { font-weight: 700; }
   .sev-warning .log-source { color: var(--yellow); }
   .sev-error .log-source { color: var(--red); }
   .sev-info .log-source { color: var(--blue); }
+  .sev-warning::before { content: "⚠ "; }
+  .sev-error::before { content: "✕ "; }
+  .sev-info::before { content: "· "; color: var(--text-faint); }
 
+  /* ---------------- topology svg ---------------- */
+  #network-svg { width: 100%; flex: 1; min-height: 0; }
   svg text { fill: var(--text); font-size: 11px; }
-  .feeder-line { stroke-width: 4; transition: stroke 0.4s ease; }
-  .asset-node circle { stroke-width: 2; transition: stroke 0.4s ease; }
-
-  #blockchain-strip {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    margin-top: 10px;
-    padding-bottom: 4px;
+  .feeder-line { stroke-width: 4; stroke-linecap: round; transition: stroke 0.4s ease; }
+  .feeder-line.alert { animation: line-pulse 1.3s ease-in-out infinite; }
+  @keyframes line-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .asset-node circle.node-ring { stroke-width: 2.5; transition: stroke 0.4s ease; }
+  .asset-node.alert circle.node-ring { animation: node-pulse 1.3s ease-in-out infinite; }
+  @keyframes node-pulse {
+    0%, 100% { filter: drop-shadow(0 0 0 currentColor); }
+    50% { filter: drop-shadow(0 0 7px currentColor); }
   }
-  .block-chip {
-    flex: 0 0 auto;
-    background: #1c2233;
-    border: 1px solid var(--panel-border);
-    border-radius: 6px;
+  .island-region rect { transition: all 0.5s ease; }
+  .island-region.marching rect { animation: marching 12s linear infinite; }
+  @keyframes marching { to { stroke-dashoffset: -200; } }
+  .island-label { font-size: 11px; font-weight: 700; letter-spacing: 0.03em; }
+
+  #legend {
+    position: absolute;
+    right: 14px;
+    top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px 12px;
+    max-width: 56%;
+    background: rgba(10,12,18,0.6);
+    border: 1px solid var(--panel-border-soft);
+    border-radius: 8px;
     padding: 6px 10px;
-    font-size: 11px;
-    color: var(--text-dim);
+    backdrop-filter: blur(2px);
+    pointer-events: none;
   }
-  .block-chip b { color: var(--purple); }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-dim); }
+  .legend-swatch { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
 
-  #resilience-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .island-region rect {
-    transition: all 0.5s ease;
-  }
-  .island-label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-  }
+  #resilience-row { display: flex; align-items: center; gap: 14px; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #262c40; border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: #313850; }
 </style>
 </head>
 <body>
 
+<div id="toast-stack"></div>
+
 <div id="topbar">
-  <h1>Microgrid Resilience Exchange</h1>
-  <button class="scenario-btn" onclick="triggerScenario('solar_drop')">Solar Drop</button>
-  <button class="scenario-btn" onclick="triggerScenario('demand_spike')">Demand Spike</button>
-  <button class="scenario-btn" onclick="triggerScenario('feeder_overload')">Feeder Overload</button>
-  <button class="scenario-btn" onclick="triggerScenario('battery_failure')">Battery Failure</button>
-  <button class="scenario-btn" onclick="triggerScenario('grid_outage')">Grid Outage</button>
-  <button class="scenario-btn" onclick="triggerScenario('line_fault')">Line Fault</button>
-  <button class="scenario-btn" id="reset-btn" onclick="resetScenario()">Reset</button>
-  <span id="conn-status" class="disconnected">connecting...</span>
+  <div id="brand">
+    <span class="dot"></span>
+    <div>
+      <h1>Microgrid Resilience Exchange</h1>
+      <div class="subtitle">predictive multi-agent flexibility market · real AC power-flow validation</div>
+    </div>
+  </div>
+
+  <div id="scenario-group">
+    <button class="scenario-btn" onclick="triggerScenario('solar_drop', this)">Solar Drop</button>
+    <button class="scenario-btn" onclick="triggerScenario('demand_spike', this)">Demand Spike</button>
+    <button class="scenario-btn" onclick="triggerScenario('feeder_overload', this)">Feeder Overload</button>
+    <button class="scenario-btn" onclick="triggerScenario('battery_failure', this)">Battery Failure</button>
+    <button class="scenario-btn" onclick="triggerScenario('grid_outage', this)">Grid Outage</button>
+    <button class="scenario-btn" onclick="triggerScenario('line_fault', this)">Line Fault</button>
+  </div>
+  <button id="reset-btn" onclick="resetScenario(this)">Reset</button>
+  <span id="conn-status" class="disconnected">connecting</span>
 </div>
 
 <div id="layout">
   <div class="panel" id="map-panel">
     <h2>Network Topology</h2>
-    <svg id="network-svg" viewBox="0 0 700 380" style="width:100%; flex:1;"></svg>
+    <svg id="network-svg" viewBox="0 0 700 380"></svg>
+    <div id="legend"></div>
   </div>
 
-  <div class="panel" id="status-panel">
-    <h2>System Status</h2>
-    <div id="status-content"></div>
-    <h2 style="margin-top:16px;">Blockchain</h2>
-    <div id="blockchain-strip"></div>
+  <div id="right-col">
+    <div class="panel" id="status-panel">
+      <h2>System Status</h2>
+      <div id="status-content"></div>
+    </div>
+
+    <div class="panel" id="chain-panel">
+      <h2 data-hint="newest first">Blockchain Ledger <span class="count-pill" id="chain-count">0</span></h2>
+      <div id="chain-scroll"></div>
+    </div>
   </div>
 
   <div class="panel" id="log-panel">
@@ -196,6 +418,13 @@ const WS_URL = (location.protocol === "https:" ? "wss://" : "ws://") + location.
 let ws = null;
 let latestSnapshot = null;
 let renderedEventIds = new Set();
+let renderedBlockIds = new Set();
+let firstRender = true;
+
+const SCENARIO_LABELS = {
+  solar_drop: "Solar Drop", demand_spike: "Demand Spike", feeder_overload: "Feeder Overload",
+  battery_failure: "Battery Failure", grid_outage: "Grid Outage", line_fault: "Line Fault",
+};
 
 // Layout is computed dynamically from whatever GridState actually
 // contains — NOT hardcoded to specific asset_ids. This matters because
@@ -205,12 +434,16 @@ let renderedEventIds = new Set();
 // id-keyed positions would render a blank map the moment GRID_SOURCE
 // flips to live.
 const TYPE_COLOR = {
-  hospital: "#f5544a", academic: "#4d8ef5", factory: "#b06cf5",
-  battery: "#3ddc84", solar: "#f5c542", ev: "#4d8ef5", utility: "#8a91a3",
+  hospital: "#f87171", academic: "#60a5fa", factory: "#c084fc",
+  battery: "#34d399", solar: "#fbbf24", ev: "#60a5fa", utility: "#8a91a3",
 };
 const ASSET_ICON = {
   hospital: "H", academic: "A", factory: "F",
   battery: "B", solar: "S", ev: "EV", utility: "U",
+};
+const TYPE_LABEL = {
+  hospital: "Hospital", academic: "Academic", factory: "Factory",
+  battery: "Battery", solar: "Solar", ev: "EV charger", utility: "Utility",
 };
 
 function computeLayout(gs) {
@@ -219,7 +452,7 @@ function computeLayout(gs) {
   // it's excluded from the topology drawing (still shown as a loading
   // bar in the status panel, since that's a real physical constraint).
   const feeders = gs.feeders.filter(f => f.feeder_id !== "TRANSFORMER");
-  const hubY = 200;
+  const hubY = 195;
   const n = Math.max(feeders.length, 1);
   const spacing = 700 / (n + 1);
 
@@ -238,7 +471,7 @@ function computeLayout(gs) {
       const indexInSide = above ? j : j - upCount;
       const spread = 120;
       const xOffset = sideCount > 1 ? (indexInSide - (sideCount - 1) / 2) * spread : 0;
-      positions[assetId] = { x: hubX + xOffset, y: above ? hubY - 140 : hubY + 140 };
+      positions[assetId] = { x: hubX + xOffset, y: above ? hubY - 132 : hubY + 132 };
     });
   });
 
@@ -265,16 +498,63 @@ function setConnStatus(connected) {
   el.className = connected ? "connected" : "disconnected";
 }
 
-async function triggerScenario(name) {
-  await fetch(`${API_BASE}/scenario/${name}`, { method: "POST" });
+// ---------------- toasts ----------------
+function showToast(message, type = "info") {
+  const stack = document.getElementById("toast-stack");
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  stack.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add("fade-out");
+    setTimeout(() => toast.remove(), 400);
+  }, 3800);
 }
-async function resetScenario() {
-  const resp = await fetch(`${API_BASE}/scenario/reset`, { method: "POST" });
-  if (resp.ok) {
-    renderedEventIds.clear();
-    document.getElementById("log-scroll").innerHTML = "";
-  } else {
-    console.error("Reset failed:", resp.status, await resp.text());
+
+async function triggerScenario(name, btn) {
+  if (btn.disabled) return;
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.classList.add("pending");
+  btn.textContent = "Triggering…";
+  try {
+    const resp = await fetch(`${API_BASE}/scenario/${name}`, { method: "POST" });
+    if (resp.ok) {
+      showToast(`⚡ ${SCENARIO_LABELS[name] || name} triggered — watch the topology and activity feed`, "warning");
+    } else {
+      showToast(`Failed to trigger ${SCENARIO_LABELS[name] || name} (HTTP ${resp.status})`, "error");
+    }
+  } catch (e) {
+    showToast(`Failed to trigger ${SCENARIO_LABELS[name] || name}: ${e}`, "error");
+  } finally {
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.classList.remove("pending");
+      btn.textContent = original;
+    }, 500);
+  }
+}
+
+async function resetScenario(btn) {
+  if (btn.disabled) return;
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = "Resetting…";
+  try {
+    const resp = await fetch(`${API_BASE}/scenario/reset`, { method: "POST" });
+    if (resp.ok) {
+      renderedEventIds.clear();
+      renderedBlockIds.clear();
+      document.getElementById("log-scroll").innerHTML = "";
+      showToast("System reset to normal state", "success");
+    } else {
+      showToast(`Reset failed (HTTP ${resp.status})`, "error");
+      console.error("Reset failed:", resp.status, await resp.text());
+    }
+  } catch (e) {
+    showToast(`Reset failed: ${e}`, "error");
+  } finally {
+    setTimeout(() => { btn.disabled = false; btn.textContent = original; }, 400);
   }
 }
 
@@ -282,6 +562,14 @@ function statusColor(percent) {
   if (percent >= 100) return "var(--red)";
   if (percent >= 80) return "var(--yellow)";
   return "var(--green)";
+}
+
+function statusBadge(status, loadingPercent) {
+  const s = (status || "normal").toLowerCase();
+  if (s === "faulted") return `<span class="badge b-faulted">Faulted</span>`;
+  if (s === "islanded") return `<span class="badge b-islanded">Islanded</span>`;
+  if (loadingPercent >= 80 || s === "warning") return `<span class="badge b-warning">Warning</span>`;
+  return `<span class="badge b-normal">Normal</span>`;
 }
 
 // Nominal assumptions for the demo — not physically calibrated, just
@@ -299,7 +587,7 @@ function computeResilience(gs) {
   const battery = gs.assets.find(a => a.asset_type === "battery");
   const hospital = gs.assets.find(a => a.asset_type === "hospital");
   if (!battery || !hospital || battery.soc_percent == null) {
-    return { hours: null, fraction: 0, color: "var(--text-dim)", label: "No hospital battery data" };
+    return { hours: null, fraction: 0, color: "var(--text-faint)", label: "No hospital battery data" };
   }
 
   if (!battery.online) {
@@ -307,7 +595,7 @@ function computeResilience(gs) {
       hours: 0,
       fraction: 0,
       color: "var(--red)",
-      label: "Battery OFFLINE \u2014 no backup power available",
+      label: "Battery OFFLINE — no backup power available",
       isIslanded: (gs.islands || []).some(group => group.includes(hospital.asset_id)),
     };
   }
@@ -324,7 +612,7 @@ function computeResilience(gs) {
   else if (hours < 4) color = "var(--yellow)";
 
   const label = isIslanded
-    ? `On island power \u2014 covering ~${criticalDrawKw.toFixed(0)} kW critical load`
+    ? `On island power — covering ~${criticalDrawKw.toFixed(0)} kW critical load`
     : `Estimated if grid were lost right now`;
 
   return { hours, fraction, color, label, isIslanded };
@@ -336,6 +624,7 @@ function render() {
   renderNetwork(latestSnapshot);
   renderLog(latestSnapshot);
   renderBlockchain(latestSnapshot);
+  firstRender = false;
 }
 
 function renderStatus(snap) {
@@ -349,12 +638,12 @@ function renderStatus(snap) {
 
   let html = `
     <div class="status-row">
-      <div class="status-label">Total Demand</div>
-      <div class="status-value">${totalDemand.toFixed(0)} kW</div>
+      <div class="status-label"><span>Total Demand</span></div>
+      <div class="status-value">${totalDemand.toFixed(0)} <span style="font-size:12px; color:var(--text-faint); font-weight:500;">kW</span></div>
     </div>
     <div class="status-row">
-      <div class="status-label">Renewable Generation</div>
-      <div class="status-value">${totalGen.toFixed(0)} kW</div>
+      <div class="status-label"><span>Renewable Generation</span></div>
+      <div class="status-value">${totalGen.toFixed(0)} <span style="font-size:12px; color:var(--text-faint); font-weight:500;">kW</span></div>
     </div>
   `;
 
@@ -362,18 +651,20 @@ function renderStatus(snap) {
     const soc = battery.soc_percent ?? 0;
     html += `
       <div class="status-row">
-        <div class="status-label">Hospital Battery SOC ${battery.online ? "" : "(OFFLINE)"}</div>
+        <div class="status-label"><span>Hospital Battery SOC</span>${battery.online ? "" : '<span class="badge b-faulted">Offline</span>'}</div>
         <div class="status-value">${soc.toFixed(0)}%</div>
         <div class="bar-bg"><div class="bar-fill" style="width:${soc}%; background:${statusColor(100-soc)}"></div></div>
       </div>
     `;
   }
 
+  html += `<div class="divider"></div>`;
+
   for (const feeder of gs.feeders) {
     const pct = Math.min(feeder.loading_percent, 100);
     html += `
       <div class="status-row">
-        <div class="status-label">Feeder ${feeder.feeder_id} — ${feeder.status}</div>
+        <div class="status-label"><span>Feeder ${feeder.feeder_id}</span>${statusBadge(feeder.status, feeder.loading_percent)}</div>
         <div class="status-value">${feeder.loading_percent.toFixed(0)}%</div>
         <div class="bar-bg"><div class="bar-fill" style="width:${pct}%; background:${statusColor(feeder.loading_percent)}"></div></div>
       </div>
@@ -382,10 +673,13 @@ function renderStatus(snap) {
 
   for (const pred of gs.predictions) {
     if (pred.predicted_overload) {
-      const mins = pred.eta_seconds != null ? Math.round(pred.eta_seconds / 60) : "?";
-      html += `<div class="status-row" style="color:var(--yellow); font-size:12px;">⚠ Feeder ${pred.feeder_id} overload predicted in ${mins}m</div>`;
+      const mins = pred.eta_seconds != null ? Math.round(pred.eta_seconds / 60) : null;
+      const when = mins != null ? `in ${mins}m` : "imminently";
+      html += `<div class="status-row" style="color:var(--yellow); font-size:12px; display:flex; align-items:center; gap:6px;">⚠ Feeder ${pred.feeder_id} overload predicted ${when}</div>`;
     }
   }
+
+  html += `<div class="divider"></div>`;
 
   const res = computeResilience(gs);
   const circumference = 2 * Math.PI * 28;
@@ -394,16 +688,16 @@ function renderStatus(snap) {
 
   html += `
     <div class="status-row" id="resilience-row">
-      <svg width="70" height="70" viewBox="0 0 70 70">
-        <circle cx="35" cy="35" r="28" fill="none" stroke="#1c2233" stroke-width="8"/>
+      <svg width="70" height="70" viewBox="0 0 70 70" style="flex:0 0 auto;">
+        <circle cx="35" cy="35" r="28" fill="none" stroke="#1a2032" stroke-width="8"/>
         <circle cx="35" cy="35" r="28" fill="none" stroke="${res.color}" stroke-width="8"
           stroke-linecap="round" stroke-dasharray="${dash} ${circumference}"
           transform="rotate(-90 35 35)" style="transition: stroke-dasharray 0.5s ease;" />
         <text x="35" y="40" text-anchor="middle" font-size="13" font-weight="700" fill="var(--text)">${hoursText}</text>
       </svg>
       <div>
-        <div class="status-label">Hospital Resilience Horizon</div>
-        <div style="font-size:12px; color:${res.hours === 0 ? "var(--red)" : res.isIslanded ? "var(--yellow)" : "var(--text-dim)"};">${res.label}</div>
+        <div class="status-label" style="margin-bottom:2px;"><span>Hospital Resilience Horizon</span></div>
+        <div style="font-size:11.5px; color:${res.hours === 0 ? "var(--red)" : res.isIslanded ? "var(--yellow)" : "var(--text-dim)"};">${res.label}</div>
       </div>
     </div>
   `;
@@ -434,7 +728,7 @@ function renderNetwork(snap) {
       if (feeder && hubs[feeder.feeder_id]) points.push(hubs[feeder.feeder_id]);
       if (points.length === 0) return;
 
-      const pad = 45;
+      const pad = 42;
       const minX = Math.min(...points.map(p => p.x)) - pad;
       const maxX = Math.max(...points.map(p => p.x)) + pad;
       const minY = Math.min(...points.map(p => p.y)) - pad;
@@ -443,8 +737,9 @@ function renderNetwork(snap) {
 
       regionParts.push(`
         <rect x="${minX}" y="${minY}" width="${maxX - minX}" height="${maxY - minY}"
-              rx="18" fill="${color}" fill-opacity="0.06" stroke="${color}" stroke-opacity="0.5"
-              stroke-width="1.5" stroke-dasharray="6 5" class="island-region" />
+              rx="16" fill="${color}" fill-opacity="0.10" stroke="${color}" stroke-opacity="0.7"
+              stroke-width="1.75" stroke-dasharray="7 6" class="island-region marching" />
+        <text x="${minX + 10}" y="${minY + 18}" font-size="10" font-weight="700" fill="${color}">ISLAND ${idx + 1} · ${group.length} assets</text>
       `);
       islandLegend.push({ label: `Island ${idx + 1}`, color });
     });
@@ -454,12 +749,14 @@ function renderNetwork(snap) {
   for (const feeder of gs.feeders) {
     const hub = hubs[feeder.feeder_id];
     if (!hub) continue; // synthetic TRANSFORMER feeder has no hub — skipped by design
-    const color = feeder.status === "faulted" || feeder.status === "islanded"
+    const isAlert = feeder.status === "faulted" || feeder.status === "islanded";
+    const color = isAlert
       ? "var(--red)"
       : feeder.loading_percent >= 100 ? "var(--red)"
       : feeder.loading_percent >= 80 ? "var(--yellow)"
       : "var(--green)";
     const dash = feeder.status === "islanded" ? 'stroke-dasharray="5 4"' : "";
+    const alertClass = isAlert ? "alert" : "";
     for (const assetId of feeder.connected_assets) {
       const pos = positions[assetId];
       if (!pos) continue;
@@ -467,12 +764,15 @@ function renderNetwork(snap) {
       const disconnected = asset && !asset.online;
       const lineColor = disconnected ? "#4a4f5e" : color;
       const lineDash = disconnected ? 'stroke-dasharray="3 4"' : dash;
-      parts.push(`<line class="feeder-line" x1="${hub.x}" y1="${hub.y}" x2="${pos.x}" y2="${pos.y}" stroke="${lineColor}" ${lineDash} />`);
+      parts.push(`<line class="feeder-line ${disconnected ? '' : alertClass}" x1="${hub.x}" y1="${hub.y}" x2="${pos.x}" y2="${pos.y}" stroke="${lineColor}" ${lineDash} />`);
     }
     const hubStroke = feeder.status === "islanded" ? "var(--yellow)" : color;
     const hubDash = feeder.status === "islanded" ? 'stroke-dasharray="3 3"' : "";
-    parts.push(`<circle cx="${hub.x}" cy="${hub.y}" r="10" fill="#1c2233" stroke="${hubStroke}" stroke-width="2" ${hubDash} />`);
-    parts.push(`<text x="${hub.x}" y="${hub.y - 16}" text-anchor="middle">${feeder.feeder_id}</text>`);
+    parts.push(`<circle cx="${hub.x}" cy="${hub.y}" r="10" fill="#161b2a" stroke="${hubStroke}" stroke-width="2.5" ${hubDash} class="${alertClass}" style="color:${hubStroke}" />`);
+    parts.push(`<text x="${hub.x}" y="${hub.y - 18}" text-anchor="middle" font-weight="700">${feeder.feeder_id}</text>`);
+    if (isAlert) {
+      parts.push(`<text x="${hub.x}" y="${hub.y + 26}" text-anchor="middle" font-size="9" font-weight="700" fill="${color}" letter-spacing="0.04em">${feeder.status.toUpperCase()}</text>`);
+    }
   }
 
   // asset nodes
@@ -482,34 +782,37 @@ function renderNetwork(snap) {
     const typeColor = TYPE_COLOR[asset.asset_type] || "#8a91a3";
     const strokeColor = asset.online ? typeColor : "var(--red)";
     const dashAttr = asset.online ? "" : 'stroke-dasharray="4 3"';
-    const icon = ASSET_ICON[asset.asset_type] || "•";
+    const icon = asset.online ? (ASSET_ICON[asset.asset_type] || "•") : "✕";
+    const alertClass = !asset.online ? "alert" : "";
     parts.push(`
-      <g class="asset-node">
-        <circle cx="${pos.x}" cy="${pos.y}" r="26" fill="#1c2233" stroke="${strokeColor}" ${dashAttr} />
-        <text x="${pos.x}" y="${pos.y + 6}" text-anchor="middle" font-size="15" font-weight="700" fill="${strokeColor}">${icon}</text>
-        <text x="${pos.x}" y="${pos.y + 44}" text-anchor="middle" fill="#8a91a3">${asset.asset_id}</text>
+      <g class="asset-node ${alertClass}" style="color:${strokeColor}">
+        <circle class="node-ring" cx="${pos.x}" cy="${pos.y}" r="25" fill="#161b2a" stroke="${strokeColor}" ${dashAttr} />
+        <text x="${pos.x}" y="${pos.y + 5}" text-anchor="middle" font-size="14" font-weight="700" fill="${strokeColor}">${icon}</text>
+        <text x="${pos.x}" y="${pos.y + 42}" text-anchor="middle" fill="#8a91a3">${asset.asset_id}</text>
       </g>
     `);
   }
 
-  svg.innerHTML = regionParts.join("\n") + parts.join("\n") + renderIslandLegend(islandLegend);
+  svg.innerHTML = regionParts.join("\n") + parts.join("\n");
+  renderLegend(gs);
 }
 
-function renderIslandLegend(legend) {
-  if (legend.length === 0) return "";
-  // Fixed HUD position, top-left of the canvas — deliberately NOT tied to
-  // any node's coordinates, so it can never collide with a node label
-  // regardless of how the topology or padding shifts.
-  let y = 20;
-  const chips = legend.map(item => {
-    const chip = `
-      <rect x="8" y="${y - 10}" width="10" height="10" rx="2" fill="${item.color}" />
-      <text x="24" y="${y}" font-size="11" font-weight="600" fill="${item.color}">${item.label}</text>
-    `;
-    y += 18;
-    return chip;
-  }).join("\n");
-  return `<g>${chips}</g>`;
+function renderLegend(gs) {
+  const el = document.getElementById("legend");
+  const typesPresent = [...new Set(gs.assets.map(a => a.asset_type))];
+  const items = typesPresent.map(t => `
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:${TYPE_COLOR[t] || '#8a91a3'}"></span>
+      ${TYPE_LABEL[t] || t}
+    </div>
+  `).join("");
+  el.innerHTML = items + `
+    <div class="legend-item" style="border-left:1px solid var(--panel-border-soft); padding-left:10px;">
+      <span class="legend-swatch" style="background:var(--green)"></span> Normal
+    </div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--yellow)"></span> Warning</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--red)"></span> Faulted / offline</div>
+  `;
 }
 
 function renderLog(snap) {
@@ -522,7 +825,7 @@ function renderLog(snap) {
 
     const time = new Date(evt.timestamp).toLocaleTimeString();
     const line = document.createElement("div");
-    line.className = `log-line sev-${evt.severity}`;
+    line.className = `log-line sev-${evt.severity}${firstRender ? "" : " log-new"}`;
     line.innerHTML = `<span class="log-time">${time}</span> <span class="log-source">${evt.source}</span> ${evt.message}`;
     el.appendChild(line);
   }
@@ -530,11 +833,37 @@ function renderLog(snap) {
   if (wasAtBottom) el.scrollTop = el.scrollHeight;
 }
 
+function shortHash(h) {
+  if (!h) return "—";
+  return h.length > 14 ? `${h.slice(0, 8)}…${h.slice(-4)}` : h;
+}
+
 function renderBlockchain(snap) {
-  const el = document.getElementById("blockchain-strip");
-  el.innerHTML = snap.blockchain.map(tx => `
-    <div class="block-chip"><b>#${tx.block_number}</b> ${tx.tx_type.replace("_"," ")}</div>
-  `).join("");
+  const el = document.getElementById("chain-scroll");
+  document.getElementById("chain-count").textContent = snap.blockchain.length;
+
+  if (!snap.blockchain.length) {
+    el.innerHTML = `<div id="chain-empty">No blocks yet — settled trades will appear here as they confirm.</div>`;
+    return;
+  }
+
+  const rows = [...snap.blockchain].reverse().map(tx => {
+    const isNew = !renderedBlockIds.has(tx.tx_id);
+    renderedBlockIds.add(tx.tx_id);
+    const time = new Date(tx.timestamp).toLocaleTimeString();
+    return `
+      <div class="block-row${isNew && !firstRender ? " block-new" : ""}">
+        <div class="block-num">#${tx.block_number}</div>
+        <div class="block-body">
+          <div class="block-type">${tx.tx_type.replace(/_/g, " ")} <span style="color:var(--text-faint); font-weight:400;">· ${tx.payload_ref}</span></div>
+          <div class="block-meta">${shortHash(tx.hash)} ← ${shortHash(tx.prev_hash)}</div>
+        </div>
+        <div class="block-time">${time}</div>
+      </div>
+    `;
+  });
+
+  el.innerHTML = rows.join("");
 }
 
 connect();

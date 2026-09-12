@@ -12,7 +12,7 @@ import os
 
 import httpx
 
-from schemas.contracts import (
+from shared.contracts import (
     ClearFaultRequest,
     FaultInjectionRequest,
     GridState,
@@ -37,7 +37,7 @@ class GridClient:
 
     async def validate(self, actions: list[ProposedAction]) -> list[ValidationResult]:
         # Confirmed: /grid/validate expects a WRAPPED object, {"actions": [...]},
-        # not a bare array — see ValidateActionsRequest in schemas/contracts.py.
+        # not a bare array — see ValidateActionsRequest in shared/contracts.py.
         async with httpx.AsyncClient(timeout=TIMEOUT_SECONDS) as client:
             payload = ValidateActionsRequest(actions=actions)
             resp = await client.post(

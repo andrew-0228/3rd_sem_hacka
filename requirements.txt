@@ -18,5 +18,26 @@ pytest==9.1.1
 # reasoning as above -- fastapi/uvicorn's own transitive pins are more
 # current and more portable across Python versions than anything pinned
 # here from one dev's environment.
+#
+# [standard] matters, not cosmetic: bare `uvicorn` does NOT depend on
+# `websockets` or `wsproto` at all (confirmed: `pip show uvicorn` lists
+# only click/h11). orchestrator/main.py's `/ws/dashboard` route -- the
+# dashboard's entire live-update mechanism -- silently can't be served
+# without one of those installed: uvicorn has no protocol handler to
+# upgrade the connection, so it falls through to a plain 404 instead of
+# a 101 Switching Protocols. The browser just reports "WebSocket
+# connection failed" with no further detail, HTTP routes (health,
+# static files) keep working fine, and every panel on the dashboard
+# stays empty forever. `uvicorn[standard]` pulls in `websockets` (and
+# `watchfiles`, needed for --reload) so this can't happen again.
 fastapi
-uvicorn
+uvicorn[standard]
+
+# orchestrator/clients/grid_client.py and agent_client.py both need this
+# for their live HTTP calls to grid_engine/agent_engines. orchestrator/
+# has no requirements.txt of its own, so this is what actually supplies
+# it -- previously only present in agent_engines/requirements.txt, which
+# meant `pip install -r requirements.txt` alone (without also installing
+# agent_engines/requirements.txt) left the orchestrator unable to import
+# at all (ModuleNotFoundError: No module named 'httpx').
+httpx
